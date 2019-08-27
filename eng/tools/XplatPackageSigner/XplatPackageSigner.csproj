@@ -18,13 +18,6 @@
   <Import Project="..\..\targets\MicroBuild.Plugin.props" Condition="'$(MicroBuildSentinelFile)' == ''" />
   <Import Project="$(MicroBuildPluginDirectory)\MicroBuild.Plugins.*\**\build\MicroBuild.Plugins.*.props" Condition=" '$(MicroBuildPluginDirectory)' != ''" />
 
-  <!-- Disable code paths that require project.assets.json files to be present or to be computed. -->
-  <PropertyGroup>
-    <GenerateDependencyFile>false</GenerateDependencyFile>
-    <ComputeNETCoreBuildOutputFiles>false</ComputeNETCoreBuildOutputFiles>
-    <GenerateRuntimeConfigurationFiles>false</GenerateRuntimeConfigurationFiles>
-  </PropertyGroup>
-
   <PropertyGroup Condition="'$(DirectoryToSign)' != ''">
     <OutDir>$([MSBuild]::NormalizeDirectory($(DirectoryToSign)))</OutDir>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
@@ -46,7 +39,7 @@
   <Target Name="AfterBuild" />
 
   <!-- Get signed files into the directory Publish.proj expects. -->
-  <Target Name="Build" DependsOnTargets="AfterBuild">
+  <Target Name="Build" DependsOnTargets="Restore;AfterBuild">
     <Copy SourceFiles="@(FilesToSign)"
         DestinationFolder="$(ArtifactsShippingPackagesDir)"
         SkipUnchangedFiles="$(SkipCopyUnchangedFiles)"
