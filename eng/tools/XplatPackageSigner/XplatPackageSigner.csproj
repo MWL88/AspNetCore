@@ -5,7 +5,7 @@
   Note: because Authenticode signing of .dll's is not something Linux and macOS can verify anyways, this signing
   process only code-signs the .nupkg itself, not the contents.
 -->
-<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="SignPackages" InitialTargets="CheckForRequiredProperties">
+<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="CopyPackages" InitialTargets="CheckForRequiredProperties">
   <PropertyGroup>
     <SignType>$([MSBuild]::ValueOrDefault($(SignType),'real'))</SignType>
     <IsPackable>false</IsPackable>
@@ -38,8 +38,11 @@
   <!-- MicroBuild code-signing chains onto this target. -->
   <Target Name="AfterBuild" />
 
+  <!-- Run Arcade Publishing after we sign & copy the packages -->
+  <Target Name="ChainIntoPublish" DependsOnTargets="Publish" AfterTargets="CopyPackages" />
+
   <!-- Get signed files into the directory Publish.proj expects. -->
-  <Target Name="SignPackages" DependsOnTargets="AfterBuild">
+  <Target Name="CopyPackages" DependsOnTargets="AfterBuild">
     <Copy SourceFiles="@(FilesToSign)"
         DestinationFolder="$(ArtifactsShippingPackagesDir)"
         SkipUnchangedFiles="$(SkipCopyUnchangedFiles)"
