@@ -42,7 +42,7 @@
   <Target Name="ChainIntoPublish" DependsOnTargets="Publish" AfterTargets="CopyPackages" />
 
   <!-- Get signed files into the directory Publish.proj expects. -->
-  <Target Name="CopyPackages" DependsOnTargets="AfterBuild">
+  <Target Name="CopyPackages" DependsOnTargets="Restore;AfterBuild">
     <Copy SourceFiles="@(FilesToSign)"
         DestinationFolder="$(ArtifactsShippingPackagesDir)"
         SkipUnchangedFiles="$(SkipCopyUnchangedFiles)"
