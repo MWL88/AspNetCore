@@ -5,7 +5,7 @@
   Note: because Authenticode signing of .dll's is not something Linux and macOS can verify anyways, this signing
   process only code-signs the .nupkg itself, not the contents.
 -->
-<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="Build" InitialTargets="CheckForRequiredProperties">
+<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="SignPackages" InitialTargets="CheckForRequiredProperties">
   <PropertyGroup>
     <SignType>$([MSBuild]::ValueOrDefault($(SignType),'real'))</SignType>
     <IsPackable>false</IsPackable>
@@ -39,7 +39,7 @@
   <Target Name="AfterBuild" />
 
   <!-- Get signed files into the directory Publish.proj expects. -->
-  <Target Name="Build" DependsOnTargets="Restore;AfterBuild">
+  <Target Name="SignPackages" DependsOnTargets="AfterBuild">
     <Copy SourceFiles="@(FilesToSign)"
         DestinationFolder="$(ArtifactsShippingPackagesDir)"
         SkipUnchangedFiles="$(SkipCopyUnchangedFiles)"
