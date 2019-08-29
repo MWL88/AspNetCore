@@ -17,32 +17,17 @@ export class FetchHttpClient extends HttpClient {
     public async send(request: HttpRequest): Promise<HttpResponse> {
         // Check that abort was not signaled before calling send
         if (request.abortSignal && request.abortSignal.aborted) {
-            return Promise.reject(new AbortError());
+            throw new AbortError();
         }
 
         if (!request.method) {
-            return Promise.reject(new Error("No method defined."));
+            throw new Error("No method defined.");
         }
         if (!request.url) {
-            return Promise.reject(new Error("No url defined."));
+            throw new Error("No url defined.");
         }
 
         const abortController = new AbortController();
-
-        const fetchRequest = new Request(request.url!, {
-            body: request.content!,
-            cache: "no-cache",
-            credentials: "include",
-            headers: {
-                "Content-Type": "text/plain;charset=UTF-8",
-                "X-Requested-With": "XMLHttpRequest",
-                ...request.headers,
-            },
-            method: request.method!,
-            mode: "cors",
-            redirect: "manual",
-            signal: abortController.signal,
-        });
 
         let error: any;
         // Hook our abortSignal into the abort controller
@@ -67,41 +52,49 @@ export class FetchHttpClient extends HttpClient {
 
         let response: Response;
         try {
-            response = await fetch(fetchRequest);
+            response = await fetch(request.url!, {
+                body: request.content!,
+                cache: "no-cache",
+                credentials: "include",
+                headers: {
+                    "Content-Type": "text/plain;charset=UTF-8",
+                    "X-Requested-With": "XMLHttpRequest",
+                    ...request.headers,
+                },
+                method: request.method!,
+                mode: "cors",
+                redirect: "manual",
+                signal: abortController.signal,
+            });
         } catch (e) {
             if (error) {
-                return Promise.reject(error);
+                throw error;
             }
             this.logger.log(
                 LogLevel.Warning,
                 `Error from HTTP request. ${e}.`,
             );
-            return Promise.reject(e);
+            throw e;
         } finally {
             if (timeoutId) {
                 clearTimeout(timeoutId);
             }
-        }
-
-        if (!response.ok) {
-            return new HttpError(response.statusText, response.status);
-        } else {
             if (request.abortSignal) {
                 request.abortSignal.onabort = null;
             }
+        }
 
-            try {
-                const content = deserializeContent(response, request.responseType);
-                const payload = await content;
+        if (!response.ok) {
+            throw new HttpError(response.statusText, response.status);
+        } else {
+            const content = deserializeContent(response, request.responseType);
+            const payload = await content;
 
-                return new HttpResponse(
-                    response.status,
-                    response.statusText,
-                    payload,
-                );
-            } catch (e) {
-                return Promise.reject(e);
-            }
+            return new HttpResponse(
+                response.status,
+                response.statusText,
+                payload,
+            );
         }
     }
 }
