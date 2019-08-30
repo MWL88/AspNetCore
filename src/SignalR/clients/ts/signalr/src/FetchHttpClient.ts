@@ -86,16 +86,16 @@ export class FetchHttpClient extends HttpClient {
 
         if (!response.ok) {
             throw new HttpError(response.statusText, response.status);
-        } else {
-            const content = deserializeContent(response, request.responseType);
-            const payload = await content;
-
-            return new HttpResponse(
-                response.status,
-                response.statusText,
-                payload,
-            );
         }
+
+        const content = deserializeContent(response, request.responseType);
+        const payload = await content;
+
+        return new HttpResponse(
+            response.status,
+            response.statusText,
+            payload,
+        );
     }
 }
 
